@@ -43,7 +43,7 @@ local Cfg = {
     AutoWin = false,
     WinPos = Vector3.new(-8352.62305, 482.494202, 1467.85583),
     WinHeight = 25,
-    WinSpeed = 50,
+    WinSpeed = 500,
     Noclip = false,
     Fly = false,
     oldNoclipState = false
@@ -226,7 +226,8 @@ MainTab:Toggle({
                             local targetCF = CFrame.new(targetPos)
                             
                             local distance = (root.Position - targetPos).Magnitude
-                            local steps = math.max(25, math.floor(distance / 8))
+                            local speedPerStep = 500 / 60
+                            local steps = math.max(20, math.floor(distance / speedPerStep))
                             
                             for i = 1, steps do
                                 if not Cfg.AutoWin or not root.Parent then 
@@ -234,7 +235,7 @@ MainTab:Toggle({
                                     return 
                                 end
                                 root.CFrame = startCF:Lerp(targetCF, i / steps)
-                                task.wait(0.012)
+                                task.wait(0.008)
                             end
                             
                             if not Cfg.AutoWin or not root.Parent then 
