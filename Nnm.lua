@@ -42,8 +42,8 @@ local Window = WindUI:CreateWindow({
 local Cfg = {
     AutoWin = false,
     WinPos = Vector3.new(-8352.62305, 482.494202, 1467.85583),
-    WinHeight = 15,
-    WinSpeed = 50,
+    WinHeight = 25,
+    WinSpeed = 35,
     Noclip = false,
     Fly = false,
     oldNoclipState = false
@@ -181,7 +181,7 @@ MainTab:Section({
 })
 
 MainTab:Toggle({
-    Title = "Auto Win (Smooth Travel)",
+    Title = "Auto Win (Smooth Travel Overhead)",
     Value = false,
     Callback = function(state)
         Cfg.AutoWin = state
@@ -208,37 +208,37 @@ MainTab:Toggle({
                             
                             WindUI:Notify({
                                 Title = "Auto Win",
-                                Content = "Rising up...",
-                                Duration = 1,
+                                Content = "Rising up overhead...",
+                                Duration = 2,
                             })
                             
-                            for i = 0, 1, 0.1 do
+                            for i = 0, 1, 0.03 do
                                 if not Cfg.AutoWin or not root.Parent then 
                                     setNoclip(oldNoclipState)
                                     return 
                                 end
                                 root.CFrame = riseStart:Lerp(riseEnd, i)
-                                task.wait(0.01)
+                                task.wait(0.025)
                             end
                             
                             if not Cfg.AutoWin or not root.Parent then 
                                 setNoclip(oldNoclipState)
                                 return 
                             end
-                            task.wait(0.05)
+                            task.wait(0.3)
                             
                             WindUI:Notify({
                                 Title = "Auto Win",
-                                Content = "Traveling...",
-                                Duration = 1,
+                                Content = "Traveling overhead...",
+                                Duration = 2,
                             })
                             
                             local startCF = root.CFrame
-                            local targetPos = Vector3.new(Cfg.WinPos.X, root.Position.Y, Cfg.WinPos.Z)
-                            local targetCF = CFrame.new(targetPos, Vector3.new(targetPos.X, targetPos.Y, targetPos.Z + 1))
+                            local targetPos = Vector3.new(Cfg.WinPos.X, riseStart.Y + riseHeight, Cfg.WinPos.Z)
+                            local targetCF = CFrame.new(targetPos)
                             
                             local distance = (root.Position - targetPos).Magnitude
-                            local steps = math.max(20, math.min(40, math.floor(distance / 5)))
+                            local steps = math.max(45, math.floor(distance / 3))
                             
                             for i = 1, steps do
                                 if not Cfg.AutoWin or not root.Parent then 
@@ -246,31 +246,33 @@ MainTab:Toggle({
                                     return 
                                 end
                                 root.CFrame = startCF:Lerp(targetCF, i / steps)
-                                task.wait(0.008)
+                                task.wait(0.035)
                             end
                             
                             if not Cfg.AutoWin or not root.Parent then 
                                 setNoclip(oldNoclipState)
                                 return 
                             end
-                            task.wait(0.05)
+                            task.wait(0.3)
                             
                             WindUI:Notify({
                                 Title = "Auto Win",
-                                Content = "Descending...",
-                                Duration = 1,
+                                Content = "Descending to destination...",
+                                Duration = 2,
                             })
                             
                             local currentCF = root.CFrame
                             local finalCF = CFrame.new(Cfg.WinPos)
                             
-                            for i = 0, 1, 0.05 do
+                            local descendSteps = 35
+                            
+                            for i = 0, 1, (1 / descendSteps) do
                                 if not Cfg.AutoWin or not root.Parent then 
                                     setNoclip(oldNoclipState)
                                     return 
                                 end
                                 root.CFrame = currentCF:Lerp(finalCF, i)
-                                task.wait(0.008)
+                                task.wait(0.02)
                             end
                             
                             if root.Parent then
@@ -282,21 +284,14 @@ MainTab:Toggle({
                             
                             WindUI:Notify({
                                 Title = "Auto Win",
-                                Content = "Arrived! Resetting...",
-                                Duration = 2,
+                                Content = "Successfully arrived!",
+                                Duration = 3,
                             })
                             
-                            task.wait(1)
-                            
-                            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-                            if hum then 
-                                hum.Health = 0 
-                            end
-                            
-                            task.wait(3)
+                            task.wait(2)
                         end
                     end
-                    task.wait(0.5)
+                    task.wait(1)
                 end
             end)
         else
