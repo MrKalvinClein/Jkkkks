@@ -46,7 +46,8 @@ local Cfg = {
     WinSpeed = 500,
     Noclip = false,
     Fly = false,
-    oldNoclipState = false
+    oldNoclipState = false,
+    HideAll = false
 }
 
 local noclipConnection = nil
@@ -54,6 +55,7 @@ local flyConnection = nil
 local bodyVelocity = nil
 local spinConnection = nil
 local currentSpinAngle = 0
+local hiddenObjects = {}
 
 local function setNoclip(state)
     Cfg.Noclip = state
@@ -65,20 +67,6 @@ local function setNoclip(state)
                     if part:IsA("BasePart") then
                         part.CanCollide = false
                     end
-                end
-                local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
-                if hum then
-                    hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
-                    hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-                    hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
-                    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-                    hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
-                end
-            end
-            
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and obj.CanCollide then
-                    obj.CanCollide = false
                 end
             end
         end)
@@ -92,19 +80,6 @@ local function setNoclip(state)
                 if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
                     part.CanCollide = true
                 end
-            end
-            local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
-            if hum then
-                hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
-                hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-                hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true)
-                hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-                hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-            end
-        end
-        for _, obj in pairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" and obj.Parent ~= LocalPlayer.Character then
-                obj.CanCollide = true
             end
         end
     end
@@ -200,6 +175,48 @@ local function stopFly()
     end
 end
 
+local function hideAllObjects(state)
+    Cfg.HideAll = state
+    
+    if state then
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") or obj:IsA("MeshPart") or obj:IsA("Model") or obj:IsA("Decal") or obj:IsA("Texture") then
+                if obj ~= LocalPlayer.Character and not obj:IsDescendantOf(LocalPlayer.Character) then
+                    if obj:IsA("BasePart") or obj:IsA("MeshPart") then
+                        if not hiddenObjects[obj] then
+                            hiddenObjects[obj] = obj.Transparency
+                        end
+                        obj.Transparency = 1
+                    elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                        if not hiddenObjects[obj] then
+                            hiddenObjects[obj] = obj.Transparency
+                        end
+                        obj.Transparency = 1
+                    elseif obj:IsA("Model") then
+                        for _, part in pairs(obj:GetDescendants()) do
+                            if part:IsA("BasePart") or part:IsA("MeshPart") then
+                                if not hiddenObjects[part] then
+                                    hiddenObjects[part] = part.Transparency
+                                end
+                                part.Transparency = 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    else
+        for obj, originalTransparency in pairs(hiddenObjects) do
+            if obj and obj.Parent then
+                pcall(function()
+                    obj.Transparency = originalTransparency
+                end)
+            end
+        end
+        hiddenObjects = {}
+    end
+end
+
 local MainTab = Window:Tab({
     Title = "Main",
     Icon = "box",
@@ -257,29 +274,22 @@ MainTab:Toggle({
                             if not Cfg.Fly then
                                 startFly()
                             end
-                            setNoclip(true)
-                            
-                            local riseHeight = Cfg.WinHeight
-                            local riseStart = root.CFrame
-                            local riseEnd = riseStart * CFrame.new(0, riseHeight, 0)
                             
                             for i = 0, 1, 0.12 do
                                 if not Cfg.AutoWin or not root.Parent then 
-                                    setNoclip(oldNoclipState)
                                     return 
                                 end
-                                root.CFrame = riseStart:Lerp(riseEnd, i)
+                                root.CFrame = root.CFrame * CFrame.new(0, Cfg.WinHeight * i, 0)
                                 task.wait(0.008)
                             end
                             
                             if not Cfg.AutoWin or not root.Parent then 
-                                setNoclip(oldNoclipState)
                                 return 
                             end
                             task.wait(0.08)
                             
                             local startCF = root.CFrame
-                            local targetPos = Vector3.new(Cfg.WinPos.X, riseStart.Y + riseHeight, Cfg.WinPos.Z)
+                            local targetPos = Vector3.new(Cfg.WinPos.X, root.Position.Y, Cfg.WinPos.Z)
                             local targetCF = CFrame.new(targetPos)
                             
                             local distance = (root.Position - targetPos).Magnitude
@@ -288,7 +298,6 @@ MainTab:Toggle({
                             
                             for i = 1, steps do
                                 if not Cfg.AutoWin or not root.Parent then 
-                                    setNoclip(oldNoclipState)
                                     return 
                                 end
                                 root.CFrame = startCF:Lerp(targetCF, i / steps)
@@ -296,7 +305,6 @@ MainTab:Toggle({
                             end
                             
                             if not Cfg.AutoWin or not root.Parent then 
-                                setNoclip(oldNoclipState)
                                 return 
                             end
                             task.wait(0.08)
@@ -308,7 +316,6 @@ MainTab:Toggle({
                             
                             for i = 0, 1, (1 / descendSteps) do
                                 if not Cfg.AutoWin or not root.Parent then 
-                                    setNoclip(oldNoclipState)
                                     return 
                                 end
                                 root.CFrame = currentCF:Lerp(finalCF, i)
@@ -319,7 +326,6 @@ MainTab:Toggle({
                                 root.CFrame = finalCF
                             end
                             
-                            setNoclip(oldNoclipState)
                             stopFly()
                             
                             task.wait(0.8)
@@ -330,7 +336,6 @@ MainTab:Toggle({
             end)
         else
             stopFly()
-            setNoclip(false)
             stopSpin()
         end
     end
@@ -525,6 +530,26 @@ UserInputService.JumpRequest:Connect(function()
         LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end)
+
+local FpsTab = Window:Tab({
+    Title = "Fps Booster",
+    Icon = "rocket",
+})
+
+FpsTab:Section({
+    Title = "Visual Settings",
+    Box = false,
+    Opened = true,
+})
+
+FpsTab:Toggle({
+    Title = "Hide all (Autofarm)",
+    Desc = "Makes everything transparent to boost FPS",
+    Value = false,
+    Callback = function(state)
+        hideAllObjects(state)
+    end
+})
 
 local MiscTab = Window:Tab({
     Title = "Misc",
