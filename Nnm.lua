@@ -47,10 +47,8 @@ local Cfg = {
     WinSpeed = 500,
     Noclip = false,
     Fly = false,
-    oldNoclipState = false,
     HideAll = false,
-    HidePlayers = false,
-    Optimize = false
+    HidePlayers = false
 }
 
 local noclipConnection = nil
@@ -60,8 +58,6 @@ local spinConnection = nil
 local currentSpinAngle = 0
 local hideAllConnection = nil
 local hidePlayersConnection = nil
-local optimizeConnection = nil
-local originalLightingSettings = {}
 
 local function setNoclip(state)
     Cfg.Noclip = state
@@ -214,17 +210,6 @@ local function stopHideAll()
         hideAllConnection:Disconnect()
         hideAllConnection = nil
     end
-    if not Cfg.HideAll then
-        for _, obj in pairs(workspace:GetDescendants()) do
-            pcall(function()
-                if obj:IsA("BasePart") or obj:IsA("MeshPart") then
-                    if obj.Transparency == 1 then
-                        obj.Transparency = 0
-                    end
-                end
-            end)
-        end
-    end
 end
 
 local function startHidePlayers()
@@ -233,18 +218,16 @@ local function startHidePlayers()
     hidePlayersConnection = RunService.RenderStepped:Connect(function()
         if Cfg.HidePlayers then
             for _, plr in pairs(Players:GetPlayers()) do
-                if plr ~= LocalPlayer and plr.Character then
-                    for _, part in pairs(plr.Character:GetDescendants()) do
-                        if part:IsA("BasePart") or part:IsA("MeshPart") then
-                            pcall(function()
-                                part.Transparency = 1
-                            end)
+                if plr ~= LocalPlayer then
+                    if plr.Character then
+                        for _, part in pairs(plr.Character:GetDescendants()) do
+                            if part:IsA("BasePart") or part:IsA("MeshPart") then
+                                pcall(function()
+                                    part.Transparency = 1
+                                end)
+                            end
                         end
                     end
-                end
-            end
-            for _, plr in pairs(Players:GetPlayers()) do
-                if plr ~= LocalPlayer then
                     pcall(function()
                         local nameTag = plr:FindFirstChild("NameTag")
                         if nameTag then
@@ -258,6 +241,13 @@ local function startHidePlayers()
                                 end
                             end
                         end
+                        local character = plr.Character
+                        if character then
+                            local humanoidRoot = character:FindFirstChild("HumanoidRootPart")
+                            if humanoidRoot and humanoidRoot:FindFirstChild("BillboardGui") then
+                                humanoidRoot.BillboardGui.Enabled = false
+                            end
+                        end
                     end)
                 end
             end
@@ -269,109 +259,6 @@ local function stopHidePlayers()
     if hidePlayersConnection then
         hidePlayersConnection:Disconnect()
         hidePlayersConnection = nil
-    end
-    if not Cfg.HidePlayers then
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character then
-                for _, part in pairs(plr.Character:GetDescendants()) do
-                    if part:IsA("BasePart") or part:IsA("MeshPart") then
-                        pcall(function()
-                            part.Transparency = 0
-                        end)
-                    end
-                end
-            end
-        end
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer then
-                pcall(function()
-                    local nameTag = plr:FindFirstChild("NameTag")
-                    if nameTag then
-                        nameTag.Enabled = true
-                    end
-                end)
-            end
-        end
-    end
-end
-
-local function startOptimize()
-    if optimizeConnection then optimizeConnection:Disconnect() end
-    
-    if not originalLightingSettings.Brightness then
-        originalLightingSettings = {
-            Brightness = Lighting.Brightness,
-            ClockTime = Lighting.ClockTime,
-            FogEnd = Lighting.FogEnd,
-            FogStart = Lighting.FogStart,
-            GlobalShadows = Lighting.GlobalShadows,
-            ShadowSoftness = Lighting.ShadowSoftness,
-            Technology = Lighting.Technology
-        }
-    end
-    
-    Lighting.Brightness = 0
-    Lighting.ClockTime = 12
-    Lighting.FogEnd = 0
-    Lighting.FogStart = 0
-    Lighting.GlobalShadows = false
-    Lighting.ShadowSoftness = 0
-    Lighting.Technology = Enum.Technology.Compatibility
-    
-    local atmosphere = Lighting:FindFirstChild("Atmosphere")
-    if atmosphere then atmosphere.Enabled = false end
-    
-    local bloom = Lighting:FindFirstChild("Bloom")
-    if bloom then bloom.Enabled = false end
-    
-    local colorCorrection = Lighting:FindFirstChild("ColorCorrection")
-    if colorCorrection then colorCorrection.Enabled = false end
-    
-    local sunRays = Lighting:FindFirstChild("SunRays")
-    if sunRays then sunRays.Enabled = false end
-    
-    optimizeConnection = RunService.RenderStepped:Connect(function()
-        if Cfg.Optimize then
-            for _, descendant in pairs(workspace:GetDescendants()) do
-                if descendant:IsA("ParticleEmitter") or descendant:IsA("Fire") or descendant:IsA("Smoke") or descendant:IsA("Sparkles") then
-                    descendant.Enabled = false
-                end
-                if descendant:IsA("Decal") or descendant:IsA("Texture") then
-                    descendant.Transparency = 1
-                end
-            end
-            settings().Rendering.QualityLevel = 1
-        end
-    end)
-end
-
-local function stopOptimize()
-    if optimizeConnection then
-        optimizeConnection:Disconnect()
-        optimizeConnection = nil
-    end
-    if not Cfg.Optimize then
-        Lighting.Brightness = originalLightingSettings.Brightness or 2
-        Lighting.ClockTime = originalLightingSettings.ClockTime or 14
-        Lighting.FogEnd = originalLightingSettings.FogEnd or 100000
-        Lighting.FogStart = originalLightingSettings.FogStart or 0
-        Lighting.GlobalShadows = originalLightingSettings.GlobalShadows or true
-        Lighting.ShadowSoftness = originalLightingSettings.ShadowSoftness or 0
-        Lighting.Technology = originalLightingSettings.Technology or Enum.Technology.Future
-        
-        local atmosphere = Lighting:FindFirstChild("Atmosphere")
-        if atmosphere then atmosphere.Enabled = true end
-        
-        local bloom = Lighting:FindFirstChild("Bloom")
-        if bloom then bloom.Enabled = true end
-        
-        local colorCorrection = Lighting:FindFirstChild("ColorCorrection")
-        if colorCorrection then colorCorrection.Enabled = true end
-        
-        local sunRays = Lighting:FindFirstChild("SunRays")
-        if sunRays then sunRays.Enabled = true end
-        
-        settings().Rendering.QualityLevel = 21
     end
 end
 
@@ -412,7 +299,7 @@ MainTab:Section({
 })
 
 MainTab:Toggle({
-    Title = "Auto Win (Smooth Travel Overhead)",
+    Title = "Auto Win",
     Value = false,
     Callback = function(state)
         Cfg.AutoWin = state
@@ -427,8 +314,6 @@ MainTab:Toggle({
                         local dist = (root.Position - Cfg.WinPos).Magnitude
                         
                         if dist > 5 then
-                            local oldNoclipState = Cfg.Noclip
-                            
                             if not Cfg.Fly then
                                 startFly()
                             end
@@ -485,7 +370,6 @@ MainTab:Toggle({
                             end
                             
                             stopFly()
-                            
                             task.wait(0.8)
                         end
                     end
@@ -594,7 +478,7 @@ WalkSpeedSection:Toggle({
         if state then
             walkspeedConnection = RunService.Heartbeat:Connect(applyWalkSpeed)
             
-            bypassConnection = LocalPlayer.CharacterAdded:Connect(function(newChar)
+            bypassConnection = LocalPlayer.CharacterAdded:Connect(function()
                 task.wait(0.1)
                 applyWalkSpeed()
             end)
@@ -656,7 +540,7 @@ JumpPowerSection:Toggle({
         if state then
             jumppowerConnection = RunService.Heartbeat:Connect(applyJumpPower)
             
-            jumpBypassConnection = LocalPlayer.CharacterAdded:Connect(function(newChar)
+            jumpBypassConnection = LocalPlayer.CharacterAdded:Connect(function()
                 task.wait(0.1)
                 applyJumpPower()
             end)
@@ -701,8 +585,8 @@ FpsTab:Section({
 })
 
 FpsTab:Toggle({
-    Title = "Hide all (Autofarm)",
-    Desc = "Hides all environment objects to boost FPS",
+    Title = "Hide All",
+    Desc = "Hides all environment objects",
     Value = false,
     Callback = function(state)
         Cfg.HideAll = state
@@ -718,7 +602,7 @@ FpsTab:Space()
 
 FpsTab:Toggle({
     Title = "Hide Players",
-    Desc = "Hides other players and their nametags",
+    Desc = "Hides other players and nametags",
     Value = false,
     Callback = function(state)
         Cfg.HidePlayers = state
@@ -726,22 +610,6 @@ FpsTab:Toggle({
             startHidePlayers()
         else
             stopHidePlayers()
-        end
-    end
-})
-
-FpsTab:Space()
-
-FpsTab:Toggle({
-    Title = "Advanced Optimization",
-    Desc = "Disables lighting, particles, effects and more (Skybox preserved)",
-    Value = false,
-    Callback = function(state)
-        Cfg.Optimize = state
-        if state then
-            startOptimize()
-        else
-            stopOptimize()
         end
     end
 })
