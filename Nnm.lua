@@ -206,27 +206,27 @@ MainTab:Toggle({
                             local riseStart = root.CFrame
                             local riseEnd = riseStart * CFrame.new(0, riseHeight, 0)
                             
-                            for i = 0, 1, 0.08 do
+                            for i = 0, 1, 0.12 do
                                 if not Cfg.AutoWin or not root.Parent then 
                                     setNoclip(oldNoclipState)
                                     return 
                                 end
                                 root.CFrame = riseStart:Lerp(riseEnd, i)
-                                task.wait(0.01)
+                                task.wait(0.008)
                             end
                             
                             if not Cfg.AutoWin or not root.Parent then 
                                 setNoclip(oldNoclipState)
                                 return 
                             end
-                            task.wait(0.1)
+                            task.wait(0.08)
                             
                             local startCF = root.CFrame
                             local targetPos = Vector3.new(Cfg.WinPos.X, riseStart.Y + riseHeight, Cfg.WinPos.Z)
                             local targetCF = CFrame.new(targetPos)
                             
                             local distance = (root.Position - targetPos).Magnitude
-                            local steps = math.max(30, math.floor(distance / 6))
+                            local steps = math.max(25, math.floor(distance / 8))
                             
                             for i = 1, steps do
                                 if not Cfg.AutoWin or not root.Parent then 
@@ -234,19 +234,19 @@ MainTab:Toggle({
                                     return 
                                 end
                                 root.CFrame = startCF:Lerp(targetCF, i / steps)
-                                task.wait(0.015)
+                                task.wait(0.012)
                             end
                             
                             if not Cfg.AutoWin or not root.Parent then 
                                 setNoclip(oldNoclipState)
                                 return 
                             end
-                            task.wait(0.1)
+                            task.wait(0.08)
                             
                             local currentCF = root.CFrame
                             local finalCF = CFrame.new(Cfg.WinPos)
                             
-                            local descendSteps = 25
+                            local descendSteps = 20
                             
                             for i = 0, 1, (1 / descendSteps) do
                                 if not Cfg.AutoWin or not root.Parent then 
@@ -254,7 +254,7 @@ MainTab:Toggle({
                                     return 
                                 end
                                 root.CFrame = currentCF:Lerp(finalCF, i)
-                                task.wait(0.01)
+                                task.wait(0.008)
                             end
                             
                             if root.Parent then
@@ -264,10 +264,10 @@ MainTab:Toggle({
                             setNoclip(oldNoclipState)
                             stopFly()
                             
-                            task.wait(1)
+                            task.wait(0.8)
                         end
                     end
-                    task.wait(0.5)
+                    task.wait(0.3)
                 end
             end)
         else
