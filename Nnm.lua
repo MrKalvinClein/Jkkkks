@@ -318,9 +318,6 @@ local function startOptimize()
     Lighting.ShadowSoftness = 0
     Lighting.Technology = Enum.Technology.Compatibility
     
-    local sky = Lighting:FindFirstChild("Sky")
-    if sky then sky.Enabled = false end
-    
     local atmosphere = Lighting:FindFirstChild("Atmosphere")
     if atmosphere then atmosphere.Enabled = false end
     
@@ -362,11 +359,17 @@ local function stopOptimize()
         Lighting.ShadowSoftness = originalLightingSettings.ShadowSoftness or 0
         Lighting.Technology = originalLightingSettings.Technology or Enum.Technology.Future
         
-        local sky = Lighting:FindFirstChild("Sky")
-        if sky then sky.Enabled = true end
-        
         local atmosphere = Lighting:FindFirstChild("Atmosphere")
         if atmosphere then atmosphere.Enabled = true end
+        
+        local bloom = Lighting:FindFirstChild("Bloom")
+        if bloom then bloom.Enabled = true end
+        
+        local colorCorrection = Lighting:FindFirstChild("ColorCorrection")
+        if colorCorrection then colorCorrection.Enabled = true end
+        
+        local sunRays = Lighting:FindFirstChild("SunRays")
+        if sunRays then sunRays.Enabled = true end
         
         settings().Rendering.QualityLevel = 21
     end
@@ -731,7 +734,7 @@ FpsTab:Space()
 
 FpsTab:Toggle({
     Title = "Advanced Optimization",
-    Desc = "Disables lighting, skybox, particles, effects and more",
+    Desc = "Disables lighting, particles, effects and more (Skybox preserved)",
     Value = false,
     Callback = function(state)
         Cfg.Optimize = state
