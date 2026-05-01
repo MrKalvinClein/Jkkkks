@@ -45,7 +45,6 @@ local Cfg = {
     WinHeight = 25,
     WinSpeed = 500,
     Noclip = false,
-    Spin = false,
     Fly = false,
     oldNoclipState = false
 }
@@ -72,7 +71,6 @@ local function setNoclip(state)
                     hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
                     hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
                     hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
-                    hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
                     hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
                     hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
                 end
@@ -100,7 +98,6 @@ local function setNoclip(state)
                 hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
                 hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
                 hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true)
-                hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
                 hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
                 hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
             end
@@ -114,14 +111,13 @@ local function setNoclip(state)
 end
 
 local function startSpin()
-    Cfg.Spin = true
     if spinConnection then spinConnection:Disconnect() end
     
     spinConnection = RunService.Heartbeat:Connect(function()
-        if Cfg.Spin and LocalPlayer.Character then
+        if Cfg.AutoWin and LocalPlayer.Character then
             local rootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             if rootPart then
-                currentSpinAngle = currentSpinAngle + 0.15
+                currentSpinAngle = currentSpinAngle + 0.2
                 if currentSpinAngle >= 360 then
                     currentSpinAngle = 0
                 end
@@ -134,7 +130,6 @@ local function startSpin()
 end
 
 local function stopSpin()
-    Cfg.Spin = false
     if spinConnection then
         spinConnection:Disconnect()
         spinConnection = nil
@@ -247,6 +242,7 @@ MainTab:Toggle({
     Callback = function(state)
         Cfg.AutoWin = state
         if state then
+            startSpin()
             task.spawn(function()
                 while Cfg.AutoWin do
                     local char = LocalPlayer.Character
@@ -257,16 +253,11 @@ MainTab:Toggle({
                         
                         if dist > 5 then
                             local oldNoclipState = Cfg.Noclip
-                            local oldSpinState = Cfg.Spin
                             
                             if not Cfg.Fly then
                                 startFly()
                             end
                             setNoclip(true)
-                            
-                            if oldSpinState then
-                                startSpin()
-                            end
                             
                             local riseHeight = Cfg.WinHeight
                             local riseStart = root.CFrame
@@ -275,7 +266,6 @@ MainTab:Toggle({
                             for i = 0, 1, 0.12 do
                                 if not Cfg.AutoWin or not root.Parent then 
                                     setNoclip(oldNoclipState)
-                                    if oldSpinState then stopSpin() end
                                     return 
                                 end
                                 root.CFrame = riseStart:Lerp(riseEnd, i)
@@ -284,7 +274,6 @@ MainTab:Toggle({
                             
                             if not Cfg.AutoWin or not root.Parent then 
                                 setNoclip(oldNoclipState)
-                                if oldSpinState then stopSpin() end
                                 return 
                             end
                             task.wait(0.08)
@@ -300,7 +289,6 @@ MainTab:Toggle({
                             for i = 1, steps do
                                 if not Cfg.AutoWin or not root.Parent then 
                                     setNoclip(oldNoclipState)
-                                    if oldSpinState then stopSpin() end
                                     return 
                                 end
                                 root.CFrame = startCF:Lerp(targetCF, i / steps)
@@ -309,7 +297,6 @@ MainTab:Toggle({
                             
                             if not Cfg.AutoWin or not root.Parent then 
                                 setNoclip(oldNoclipState)
-                                if oldSpinState then stopSpin() end
                                 return 
                             end
                             task.wait(0.08)
@@ -322,7 +309,6 @@ MainTab:Toggle({
                             for i = 0, 1, (1 / descendSteps) do
                                 if not Cfg.AutoWin or not root.Parent then 
                                     setNoclip(oldNoclipState)
-                                    if oldSpinState then stopSpin() end
                                     return 
                                 end
                                 root.CFrame = currentCF:Lerp(finalCF, i)
@@ -389,24 +375,10 @@ local PlayerTab = Window:Tab({
 PlayerTab:Space()
 
 PlayerTab:Toggle({
-    Title = "No Clip (Traspasa TODO)",
+    Title = "No Clip",
     Value = false,
     Callback = function(state)
         setNoclip(state)
-    end
-})
-
-PlayerTab:Space()
-
-PlayerTab:Toggle({
-    Title = "Spin (Girar Personaje)",
-    Value = false,
-    Callback = function(state)
-        if state then
-            startSpin()
-        else
-            stopSpin()
-        end
     end
 })
 
