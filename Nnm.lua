@@ -42,8 +42,8 @@ local Window = WindUI:CreateWindow({
 local Cfg = {
     AutoWin = false,
     WinPos = Vector3.new(-8352.62305, 482.494202, 1467.85583),
-    WinHeight = 8,
-    WinSpeed = 200,
+    WinHeight = 15,
+    WinSpeed = 50,
     Noclip = false,
     Fly = false,
     oldNoclipState = false
@@ -206,25 +206,39 @@ MainTab:Toggle({
                             local riseStart = root.CFrame
                             local riseEnd = riseStart * CFrame.new(0, riseHeight, 0)
                             
+                            WindUI:Notify({
+                                Title = "Auto Win",
+                                Content = "Rising up...",
+                                Duration = 1,
+                            })
+                            
                             for i = 0, 1, 0.1 do
                                 if not Cfg.AutoWin or not root.Parent then 
                                     setNoclip(oldNoclipState)
                                     return 
                                 end
                                 root.CFrame = riseStart:Lerp(riseEnd, i)
-                                task.wait()
+                                task.wait(0.01)
                             end
                             
                             if not Cfg.AutoWin or not root.Parent then 
                                 setNoclip(oldNoclipState)
                                 return 
                             end
+                            task.wait(0.05)
+                            
+                            WindUI:Notify({
+                                Title = "Auto Win",
+                                Content = "Traveling...",
+                                Duration = 1,
+                            })
                             
                             local startCF = root.CFrame
                             local targetPos = Vector3.new(Cfg.WinPos.X, root.Position.Y, Cfg.WinPos.Z)
                             local targetCF = CFrame.new(targetPos, Vector3.new(targetPos.X, targetPos.Y, targetPos.Z + 1))
                             
-                            local steps = 15
+                            local distance = (root.Position - targetPos).Magnitude
+                            local steps = math.max(20, math.min(40, math.floor(distance / 5)))
                             
                             for i = 1, steps do
                                 if not Cfg.AutoWin or not root.Parent then 
@@ -232,24 +246,31 @@ MainTab:Toggle({
                                     return 
                                 end
                                 root.CFrame = startCF:Lerp(targetCF, i / steps)
-                                task.wait()
+                                task.wait(0.008)
                             end
                             
                             if not Cfg.AutoWin or not root.Parent then 
                                 setNoclip(oldNoclipState)
                                 return 
                             end
+                            task.wait(0.05)
+                            
+                            WindUI:Notify({
+                                Title = "Auto Win",
+                                Content = "Descending...",
+                                Duration = 1,
+                            })
                             
                             local currentCF = root.CFrame
                             local finalCF = CFrame.new(Cfg.WinPos)
                             
-                            for i = 0, 1, 0.1 do
+                            for i = 0, 1, 0.05 do
                                 if not Cfg.AutoWin or not root.Parent then 
                                     setNoclip(oldNoclipState)
                                     return 
                                 end
                                 root.CFrame = currentCF:Lerp(finalCF, i)
-                                task.wait()
+                                task.wait(0.008)
                             end
                             
                             if root.Parent then
@@ -259,14 +280,20 @@ MainTab:Toggle({
                             setNoclip(oldNoclipState)
                             stopFly()
                             
-                            task.wait(0.5)
+                            WindUI:Notify({
+                                Title = "Auto Win",
+                                Content = "Arrived! Resetting...",
+                                Duration = 2,
+                            })
+                            
+                            task.wait(1)
                             
                             local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
                             if hum then 
                                 hum.Health = 0 
                             end
                             
-                            task.wait(2)
+                            task.wait(3)
                         end
                     end
                     task.wait(0.5)
