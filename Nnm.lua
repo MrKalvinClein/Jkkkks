@@ -36,9 +36,7 @@ local Cfg = {
     WinSpeed = 500,
     Noclip = false,
     Fly = false,
-    HideAll = false,
-    HidePlayers = false,
-    Optimize = false
+    HidePlayers = false
 }
 
 local noclipConnection = nil
@@ -46,11 +44,8 @@ local flyConnection = nil
 local bodyVelocity = nil
 local spinConnection = nil
 local currentSpinAngle = 0
-local hideAllConnection = nil
 local hidePlayersConnection = nil
-local optimizeConnection = nil
-local originalLightingSettings = {}
-local originalSkyProperties = {}
+local secretRemovalConnection = nil
 
 local function setNoclip(state)
     Cfg.Noclip = state
@@ -170,43 +165,6 @@ local function stopFly()
     end
 end
 
-local hideAllActive = false
-
-local function startHideAll()
-    if hideAllConnection then hideAllConnection:Disconnect() end
-    
-    hideAllConnection = RunService.RenderStepped:Connect(function()
-        if hideAllActive then
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj ~= LocalPlayer.Character and not obj:IsDescendantOf(LocalPlayer.Character) then
-                    if obj:IsA("BasePart") or obj:IsA("MeshPart") or obj:IsA("Model") then
-                        pcall(function()
-                            if obj:IsA("BasePart") or obj:IsA("MeshPart") then
-                                obj.Transparency = 1
-                                obj.Material = Enum.Material.SmoothPlastic
-                            elseif obj:IsA("Model") then
-                                for _, part in pairs(obj:GetDescendants()) do
-                                    if part:IsA("BasePart") or part:IsA("MeshPart") then
-                                        part.Transparency = 1
-                                        part.Material = Enum.Material.SmoothPlastic
-                                    end
-                                end
-                            end
-                        end)
-                    end
-                end
-            end
-        end
-    end)
-end
-
-local function stopHideAll()
-    if hideAllConnection then
-        hideAllConnection:Disconnect()
-        hideAllConnection = nil
-    end
-end
-
 local function startHidePlayers()
     if hidePlayersConnection then hidePlayersConnection:Disconnect() end
     
@@ -257,126 +215,62 @@ local function stopHidePlayers()
     end
 end
 
-local function setGreySky()
-    local sky = Lighting:FindFirstChild("Sky")
-    if not sky then
-        sky = Instance.new("Sky")
-        sky.Parent = Lighting
+local function removeSecretGuard()
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local players = game:GetService("Players")
+    local localPlayer = players.LocalPlayer
+    
+    local targets = {
+        replicatedStorage:FindFirstChild("Remotes"),
+        replicatedStorage:FindFirstChild("SecretCommandsConfig"),
+        localPlayer:FindFirstChild("PlayerGui"),
+        localPlayer.PlayerGui:FindFirstChild("SecretGuard"),
+        localPlayer:FindFirstChild("SecretGuard")
+    }
+    
+    for _, target in pairs(targets) do
+        if target then
+            pcall(function()
+                local remote = target:FindFirstChild("ShowSecretGuard")
+                if remote then
+                    remote:Destroy()
+                end
+            end)
+            pcall(function()
+                target:Destroy()
+            end)
+        end
     end
     
-    if not originalSkyProperties.SkyboxBk then
-        originalSkyProperties = {
-            SkyboxBk = sky.SkyboxBk,
-            SkyboxDn = sky.SkyboxDn,
-            SkyboxFt = sky.SkyboxFt,
-            SkyboxLf = sky.SkyboxLf,
-            SkyboxRt = sky.SkyboxRt,
-            SkyboxUp = sky.SkyboxUp
-        }
+    for _, descendant in pairs(replicatedStorage:GetDescendants()) do
+        if descendant.Name == "ShowSecretGuard" or descendant.Name == "SecretGuard" or descendant.Name == "SecretCommandsConfig" then
+            pcall(function() descendant:Destroy() end)
+        end
     end
     
-    local greyTexture = "rbxassetid://212788954"
-    sky.SkyboxBk = greyTexture
-    sky.SkyboxDn = greyTexture
-    sky.SkyboxFt = greyTexture
-    sky.SkyboxLf = greyTexture
-    sky.SkyboxRt = greyTexture
-    sky.SkyboxUp = greyTexture
+    for _, descendant in pairs(localPlayer:GetDescendants()) do
+        if descendant.Name == "SecretGuard" or descendant.Name == "ShowSecretGuard" then
+            pcall(function() descendant:Destroy() end)
+        end
+    end
 end
 
-local function resetSky()
-    local sky = Lighting:FindFirstChild("Sky")
-    if sky and originalSkyProperties.SkyboxBk then
-        sky.SkyboxBk = originalSkyProperties.SkyboxBk
-        sky.SkyboxDn = originalSkyProperties.SkyboxDn
-        sky.SkyboxFt = originalSkyProperties.SkyboxFt
-        sky.SkyboxLf = originalSkyProperties.SkyboxLf
-        sky.SkyboxRt = originalSkyProperties.SkyboxRt
-        sky.SkyboxUp = originalSkyProperties.SkyboxUp
-    end
-end
-
-local function startOptimize()
-    if optimizeConnection then optimizeConnection:Disconnect() end
+local function startSecretRemoval()
+    if secretRemovalConnection then secretRemovalConnection:Disconnect() end
     
-    if not originalLightingSettings.Brightness then
-        originalLightingSettings = {
-            Brightness = Lighting.Brightness,
-            ClockTime = Lighting.ClockTime,
-            FogEnd = Lighting.FogEnd,
-            FogStart = Lighting.FogStart,
-            GlobalShadows = Lighting.GlobalShadows,
-            ShadowSoftness = Lighting.ShadowSoftness,
-            Technology = Lighting.Technology
-        }
-    end
+    removeSecretGuard()
     
-    Lighting.Brightness = 0
-    Lighting.ClockTime = 12
-    Lighting.FogEnd = 0
-    Lighting.FogStart = 0
-    Lighting.GlobalShadows = false
-    Lighting.ShadowSoftness = 0
-    Lighting.Technology = Enum.Technology.Compatibility
-    
-    setGreySky()
-    
-    local atmosphere = Lighting:FindFirstChild("Atmosphere")
-    if atmosphere then atmosphere.Enabled = false end
-    
-    local bloom = Lighting:FindFirstChild("Bloom")
-    if bloom then bloom.Enabled = false end
-    
-    local colorCorrection = Lighting:FindFirstChild("ColorCorrection")
-    if colorCorrection then colorCorrection.Enabled = false end
-    
-    local sunRays = Lighting:FindFirstChild("SunRays")
-    if sunRays then sunRays.Enabled = false end
-    
-    optimizeConnection = RunService.RenderStepped:Connect(function()
-        if Cfg.Optimize then
-            for _, descendant in pairs(workspace:GetDescendants()) do
-                if descendant:IsA("ParticleEmitter") or descendant:IsA("Fire") or descendant:IsA("Smoke") or descendant:IsA("Sparkles") then
-                    descendant.Enabled = false
-                end
-                if descendant:IsA("Decal") or descendant:IsA("Texture") then
-                    descendant.Transparency = 1
-                end
-            end
-            settings().Rendering.QualityLevel = 1
+    secretRemovalConnection = RunService.RenderStepped:Connect(function()
+        if Cfg.AutoWin then
+            removeSecretGuard()
         end
     end)
 end
 
-local function stopOptimize()
-    if optimizeConnection then
-        optimizeConnection:Disconnect()
-        optimizeConnection = nil
-    end
-    if not Cfg.Optimize then
-        Lighting.Brightness = originalLightingSettings.Brightness or 2
-        Lighting.ClockTime = originalLightingSettings.ClockTime or 14
-        Lighting.FogEnd = originalLightingSettings.FogEnd or 100000
-        Lighting.FogStart = originalLightingSettings.FogStart or 0
-        Lighting.GlobalShadows = originalLightingSettings.GlobalShadows or true
-        Lighting.ShadowSoftness = originalLightingSettings.ShadowSoftness or 0
-        Lighting.Technology = originalLightingSettings.Technology or Enum.Technology.Future
-        
-        resetSky()
-        
-        local atmosphere = Lighting:FindFirstChild("Atmosphere")
-        if atmosphere then atmosphere.Enabled = true end
-        
-        local bloom = Lighting:FindFirstChild("Bloom")
-        if bloom then bloom.Enabled = true end
-        
-        local colorCorrection = Lighting:FindFirstChild("ColorCorrection")
-        if colorCorrection then colorCorrection.Enabled = true end
-        
-        local sunRays = Lighting:FindFirstChild("SunRays")
-        if sunRays then sunRays.Enabled = true end
-        
-        settings().Rendering.QualityLevel = 21
+local function stopSecretRemoval()
+    if secretRemovalConnection then
+        secretRemovalConnection:Disconnect()
+        secretRemovalConnection = nil
     end
 end
 
@@ -423,6 +317,7 @@ MainTab:Toggle({
         Cfg.AutoWin = state
         if state then
             startSpin()
+            startSecretRemoval()
             task.spawn(function()
                 while Cfg.AutoWin do
                     local char = LocalPlayer.Character
@@ -497,6 +392,7 @@ MainTab:Toggle({
         else
             stopFly()
             stopSpin()
+            stopSecretRemoval()
         end
     end
 })
@@ -712,48 +608,6 @@ FpsTab:Toggle({
             startHidePlayers()
         else
             stopHidePlayers()
-        end
-    end
-})
-
-FpsTab:Space()
-
-FpsTab:Toggle({
-    Title = "Advanced Optimization",
-    Desc = "Disables lighting, particles, effects and sets sky to grey",
-    Value = false,
-    Callback = function(state)
-        Cfg.Optimize = state
-        if state then
-            startOptimize()
-        else
-            stopOptimize()
-        end
-    end
-})
-
-FpsTab:Space()
-
-FpsTab:Button({
-    Title = "Hide All (Autofarm)",
-    Desc = "Hides all environment objects (loop mode)",
-    Callback = function()
-        if hideAllActive then
-            hideAllActive = false
-            stopHideAll()
-            WindUI:Notify({
-                Title = "Hide All",
-                Content = "Disabled",
-                Duration = 2,
-            })
-        else
-            hideAllActive = true
-            startHideAll()
-            WindUI:Notify({
-                Title = "Hide All",
-                Content = "Enabled - Hiding all objects",
-                Duration = 2,
-            })
         end
     end
 })
