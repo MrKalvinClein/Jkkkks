@@ -279,12 +279,6 @@ local MainTab = Window:Tab({
     Icon = "box",
 })
 
-MainTab:Section({
-    Title = "Movement",
-    Box = false,
-    Opened = true,
-})
-
 local autoWalkRunning = false
 
 MainTab:Toggle({
@@ -302,12 +296,6 @@ MainTab:Toggle({
             end)
         end
     end
-})
-
-MainTab:Section({
-    Title = "Auto Win",
-    Box = false,
-    Opened = true,
 })
 
 MainTab:Toggle({
@@ -397,12 +385,6 @@ MainTab:Toggle({
     end
 })
 
-MainTab:Section({
-    Title = "Protection",
-    Box = false,
-    Opened = true,
-})
-
 MainTab:Button({
     Title = "Remove Lava",
     Callback = function()
@@ -433,8 +415,6 @@ local PlayerTab = Window:Tab({
     Icon = "user",
 })
 
-PlayerTab:Space()
-
 PlayerTab:Toggle({
     Title = "No Clip",
     Value = false,
@@ -442,8 +422,6 @@ PlayerTab:Toggle({
         setNoclip(state)
     end
 })
-
-PlayerTab:Space()
 
 local WalkSpeedSection = PlayerTab:Section({
     Title = "WalkSpeed",
@@ -470,8 +448,6 @@ WalkSpeedSection:Slider({
         applyWalkSpeed()
     end
 })
-
-WalkSpeedSection:Space()
 
 WalkSpeedSection:Toggle({
     Title = "Enable WalkSpeed",
@@ -533,8 +509,6 @@ JumpPowerSection:Slider({
     end
 })
 
-JumpPowerSection:Space()
-
 JumpPowerSection:Toggle({
     Title = "Enable JumpPower",
     Value = false,
@@ -569,8 +543,6 @@ JumpPowerSection:Toggle({
     end
 })
 
-JumpPowerSection:Space()
-
 local infiniteJumpEnabled = false
 
 JumpPowerSection:Toggle({
@@ -592,12 +564,6 @@ local FpsTab = Window:Tab({
     Icon = "rocket",
 })
 
-FpsTab:Section({
-    Title = "Visual Settings",
-    Box = false,
-    Opened = true,
-})
-
 FpsTab:Toggle({
     Title = "Hide Players",
     Desc = "Hides other players and nametags",
@@ -612,15 +578,22 @@ FpsTab:Toggle({
     end
 })
 
+FpsTab:Button({
+    Title = "Anti-Lag",
+    Desc = "Loads a performance and FPS optimization script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/MrKalvinClein/test/main/Gggz"))()
+        WindUI:Notify({
+            Title = "Anti-Lag",
+            Content = "Optimization script executed!",
+            Duration = 3,
+        })
+    end
+})
+
 local MiscTab = Window:Tab({
     Title = "Misc",
     Icon = "wrench",
-})
-
-MiscTab:Section({
-    Title = "Server",
-    Box = false,
-    Opened = true,
 })
 
 MiscTab:Button({
@@ -646,8 +619,6 @@ MiscTab:Button({
     end
 })
 
-MiscTab:Space()
-
 MiscTab:Toggle({
     Title = "Anti-AFK",
     Value = false,
@@ -659,12 +630,6 @@ MiscTab:Toggle({
             end)
         end
     end
-})
-
-MiscTab:Section({
-    Title = "Settings",
-    Box = false,
-    Opened = true,
 })
 
 MiscTab:Input({
